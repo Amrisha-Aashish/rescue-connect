@@ -1,13 +1,119 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  AGENCY
+}
+
+enum AgencyStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  BUSY
+  UNAVAILABLE
+}
+
+enum EmergencyStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CANCELLED
+}
+
+enum ResponseStatus {
+  ACCEPTED
+  REJECTED
+  COMPLETED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      UserRole @default(AGENCY)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agency Agency?
+}
+
+model Agency {
+  id                 String             @id @default(uuid())
+  name               String
+  registrationNumber String             @unique
+  phone              String
+  address            String
+  baseLatitude       Float
+  baseLongitude      Float
+  status             AgencyStatus       @default(PENDING)
+  availability       AvailabilityStatus @default(AVAILABLE)
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  approvedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  liveLocations     LiveLocation[]
+  emergencyRequests EmergencyRequest[]
+  responses         RequestResponse[]
+}
+
+model LiveLocation {
+  id         String   @id @default(uuid())
+  latitude   Float
+  longitude  Float
+  recordedAt DateTime @default(now())
+
+  agencyId String
+  agency   Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
+  @@index([agencyId, recordedAt])
+}
+
+model EmergencyRequest {
+  id          String          @id @default(uuid())
+  title       String
+  description String
+  address     String
+  latitude    Float
+  longitude   Float
+  status      EmergencyStatus @default(OPEN)
+
+  agencyId String
+  agency   Agency @relation(fields: [agencyId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  responses RequestResponse[]
+}
+
+model RequestResponse {
+  id     String         @id @default(uuid())
+  status ResponseStatus @default(ACCEPTED)
+
+  emergencyRequestId String
+  emergencyRequest   EmergencyRequest @relation(fields: [emergencyRequestId], references: [id], onDelete: Cascade)
+
+  agencyId String
+  agency   Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([emergencyRequestId, agencyId])
 }

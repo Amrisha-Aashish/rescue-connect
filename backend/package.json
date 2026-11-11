@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "start": "node -r tsx/cjs server.js",
+  "dev": "nodemon -r tsx/cjs server.js"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.14",
-    "prisma": "^7.10.1"
+    "prisma": "^7.10.1",
+    "tsx": "^4.23.15"
   }
 }
